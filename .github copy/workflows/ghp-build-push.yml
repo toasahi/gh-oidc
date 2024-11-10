@@ -1,0 +1,31 @@
+name: github packages docker image build push
+on : push
+
+
+env:
+    IMAGE_NAME: hono-image
+
+defaults:
+    run:
+        shell: bash
+concurrency:
+    group: ${{ github.workflow}}-${{github.ref}}
+    cancel-in-progress: true
+
+jobs:
+    build-push:
+        runs-on: ubuntu-22.04
+        permissions:
+            packages: write # Github Packagesへの書き込みを許可
+            contents: read # ソースコードのチェックアウトを許可
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/docker/
+              id: docker-image-build
+              with:
+                image-repository: hono/api
+                github-actor: ${{github.actor}}
+                github-repository-owner: ${{github.repository_owner}}
+              env:
+                GITHUB_TOKEN: ${{github.token}}

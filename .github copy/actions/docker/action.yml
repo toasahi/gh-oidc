@@ -1,0 +1,45 @@
+name: docker image build push
+description: buildxでdocker imageの作成、追加
+inputs:
+  dockerfile-context:
+    default: '.'
+    required: false
+    description: dockerfileの場所
+  build-args:
+    required: false
+    description: imageのbuild時に使用する環境変数
+  image-repository:
+    required: true
+    description: imageの保存先
+  github-actor:
+    required: true
+    description: コミットブランチ
+  github-repository-owner:
+    required: true
+    description: リポジトリのオーナー
+runs:
+  using: composite
+  steps:
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3 
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.github-actor }}
+        password: ${{ github.token }}
+    - uses: docker/metadata-action@v5
+      id: meta
+      with:
+        images: ghcr.io/${{ inputs.github-repository-owner }}/${{ env.IMAGE_NAME}}
+        tags: |
+            type=raw,value=latest
+            type=sha,prefix={{branch}}-
+    - uses: docker/build-push-action@v5
+      with:
+        push: true
+        context: .
+        tags: ${{ steps.meta.outputs.tags}}
+        labels: ${{ steps.meta.outputs.labels}}
+        build-args: |
+            JFROG_USERNAME=user
+            JFROG_PWD=password
+            ${{ inputs.build-args}}
