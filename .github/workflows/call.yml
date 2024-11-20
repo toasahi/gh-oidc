@@ -1,19 +1,19 @@
-name: Dynamic matrix
-on: push
-jobs:
-    prepare:
+name: Call
+on: pull_request
+jobs: 
+    call:
+        uses: ./.github/workflows/reusable-workflows.yml
+        with:
+            pr-number: ${{github.event.pull_request.number}}
+        secrets:
+            token: ${{secrets.GITHUB_TOKEN}}
+        permissions:
+            contents: read
+            pull-requests: write
+    print:
+        needs: [call]
         runs-on: ubuntu-22.04
         steps:
-            - id: dynamic
-              run: |
-                json='{"runner":["ubuntu-latest","macos-latest"]}'
-                echo "json=${json}" >> "${GITHUB_OUTPUT}"
-        outputs:
-            matrix-json: ${{ steps.dynamic.outputs.json}}
-    print:
-        needs: [prepare]
-        strategy:
-            matrix: ${{fromJson(needs.prepare.outputs.matrix-json)}}
-        runs-on: ${{matrix.runner}}
-        steps:
-            - run: echo "${RUNNER_OS}"
+            - run: echo "Result > ${MESSAGE}"
+              env:
+                MESSAGE: ${{needs.call.outputs.message}}
