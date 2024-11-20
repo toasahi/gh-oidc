@@ -1,0 +1,22 @@
+name: Dynamic matrix
+on: 
+    push:
+        paths: |
+            terraform/*
+jobs:
+    prepare:
+        runs-on: ubuntu-22.04
+        steps:
+            - id: dynamic
+              run: |
+                json='{"runner":["ubuntu-latest","macos-latest"]}'
+                echo "json=${json}" >> "${GITHUB_OUTPUT}"
+        outputs:
+            matrix-json: ${{ steps.dynamic.outputs.json}}
+    print:
+        needs: [prepare]
+        strategy:
+            matrix: ${{fromJson(needs.prepare.outputs.matrix-json)}}
+        runs-on: ${{matrix.runner}}
+        steps:
+            - run: echo "${RUNNER_OS}"
